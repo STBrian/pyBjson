@@ -1,0 +1,15 @@
+El archivo está en little endian
+Se separa de 4 en 4 bytes
+
+Valores:
+1 - Booleano
+2 - Entero
+3 - Flotante
+4 - Lista
+5 - Cadena de texto
+6 - Array
+
+Un conjunto de 4 bytes antes del inicio del agrupado de textos indica la longitud de caracteres 
+del agrupado.
+
+Después de la representación del texto viene la posición del texto en el agrupado de textos
