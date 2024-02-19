@@ -1,3 +1,5 @@
+import json, os, sys
+
 def get_rq_name_values(file):
     # Gets the first vars and values for file to work properly.
     with open(file,'rb+') as of:
