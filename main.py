@@ -1,6 +1,7 @@
+import json, sys
 from conversions import *
-import json
 from pathlib import Path
+from JOAAThash import *
 
 def extract_chunk(data: bytes, idx: int, size: int = 4, start_from: int = 0):
     start = idx * size + start_from
@@ -12,6 +13,12 @@ with open(filepath, "rb") as f:
 
 json_dict = None
 place_dir = []
+
+text_region_idx = int.from_bytes(extract_chunk(data_bytes, 0), "little", signed=False) * 3 + 1
+lenght_text_region = int.from_bytes(extract_chunk(data_bytes, text_region_idx), "little", signed=False)
+after_region_start = ((text_region_idx + 1) * 4) + lenght_text_region
+print(after_region_start)
+#sys.exit()
 
 for i in range(int.from_bytes(extract_chunk(data_bytes, 0), "little", signed=False)):
     idx = i * 3 + 1
@@ -51,9 +58,25 @@ for i in range(int.from_bytes(extract_chunk(data_bytes, 0), "little", signed=Fal
         tmp = place_dir[-1]
         dir = tmp[0]
         if tmp[1] == "array":
-            dir[f"dummy{i}"] = str(int.from_bytes(extract_chunk(data_bytes, idx + 1), "little", signed=False))
+            text_idx = int.from_bytes(extract_chunk(data_bytes, idx + 2), "little", signed=False)
+            text_idx_end = ((text_region_idx + 1) * 4) + text_idx
+            while True:
+                if data_bytes[text_idx_end] == 0:
+                    break
+                else:
+                    text_idx_end += 1
+            text_part = data_bytes[((text_region_idx + 1) * 4) + text_idx:text_idx_end]
+            dir[f"dummy{i}"] = text_part.decode("utf-8")
         elif tmp[1] == "list":
-            dir.append(str(int.from_bytes(extract_chunk(data_bytes, idx + 1), "little", signed=False)))
+            text_idx = int.from_bytes(extract_chunk(data_bytes, idx + 2), "little", signed=False)
+            text_idx_end = ((text_region_idx + 1) * 4) + text_idx
+            while True:
+                if data_bytes[text_idx_end] == 0:
+                    break
+                else:
+                    text_idx_end += 1
+            text_part = data_bytes[((text_region_idx + 1) * 4) + text_idx:text_idx_end]
+            dir.append(text_part.decode("utf-8"))
         tmp[3] += 1
     elif type_extracted == 4:
         tmp = place_dir[-1]

@@ -1,15 +1,40 @@
 El archivo está en little endian
 Se separa de 4 en 4 bytes
 
-Valores:
-1 - Booleano
-2 - Entero
-3 - Flotante
-4 - Lista
-5 - Cadena de texto
-6 - Array
+Identificadores:
+    1 - Booleano
+    2 - Entero
+    3 - Flotante
+    4 - Lista
+    5 - Cadena de texto
+    6 - Array
 
-Un conjunto de 4 bytes antes del inicio del agrupado de textos indica la longitud de caracteres 
-del agrupado.
+Un conjunto de 4 bytes antes del inicio de la región de textos indica la longitud de caracteres 
+de la región.
 
-Después de la representación del texto viene la posición del texto en el agrupado de textos
+-- Información específica
+    Estructuras:
+        1 - Booleano
+            Identificador                           - 01 00 00 00
+            Valor                                   - (01 00 00 00) ó (00 00 00 00) True or False respectivamente
+            Espacio vacío                           - 4 bytes nulos
+        2 - Entero
+            Identificador                           - 02 00 00 00
+            Valor                                   - 4 bytes signed integrer little endian
+            Espacio vacío                           - 4 bytes nulos
+        3 - Flotante
+            Identificador                           - 03 00 00 00
+            Valor                                   - 4 bytes número en formato de 32 bits de punto flotante little endian
+            Espacio vacío                           - 4 bytes nulos
+        4 - Lista
+            Identificador                           - 04 00 00 00
+            Longitud en objetos                     - 4 bytes unsigned integrer little endian
+            Unknown                                 - 4 bytes
+        5 - Cadena de texto:
+            Identificador                           - 05 00 00 00
+            Hash JOAAT                              - 4 bytes little endian
+            Posición del texto en región de textos  - 4 bytes unsigned integrer little endian
+        6 - Array
+            Identificador                           - 06 00 00 00
+            Longitud en objetos                     - 4 bytes unsigned integrer little endian
+            Unknown                                 - 4 bytes
