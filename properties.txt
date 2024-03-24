@@ -7,7 +7,7 @@ Identificadores:
     3 - Flotante
     4 - Lista
     5 - Cadena de texto
-    6 - Array
+    6 - Objeto
 
 Un conjunto de 4 bytes antes del inicio de la región de textos indica la longitud de caracteres 
 de la región.
@@ -34,7 +34,7 @@ de la región.
             Identificador                           - 05 00 00 00
             Hash JOAAT                              - 4 bytes little endian
             Posición del texto en región de textos  - 4 bytes unsigned integrer little endian
-        6 - Array
+        6 - Objeto
             Identificador                           - 06 00 00 00
             Longitud en objetos                     - 4 bytes unsigned integrer little endian
             Unknown                                 - 4 bytes
