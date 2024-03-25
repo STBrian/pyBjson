@@ -4,7 +4,7 @@
 
 ```
 El archivo está en little endian. Se separa de 4 en 4-Bytes.
-The file is in little endian, and is separated by 4-Bytes.
+The file/archive is in little endian, and is separated by 4-Bytes.
 
 Identificadores (Structure Identification):
     1 - Booleano         (Boolean)
@@ -15,7 +15,8 @@ Identificadores (Structure Identification):
     6 - Objeto           (JSON Object)
 
 Un conjunto de 4 bytes antes del inicio de la región de textos indica la longitud de caracteres de la región.
-** 4-bytes before the number starts holds data, such as the length of the text, among other things such as defining how the data is structured in the region.
+** 4-bytes before the number starts holds data, such as the length of the text.
+** Among other things such as defining how the data is structured in the region.
 
 Ejemplo (Example):
     Entero (32-Bit Integer):
