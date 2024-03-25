@@ -38,3 +38,29 @@ de la región.
             Identificador                           - 06 00 00 00
             Longitud en objetos                     - 4 bytes unsigned integrer little endian
             Unknown                                 - 4 bytes
+
+    Regiones:
+        - Estructura
+            En esta región se encuentran almacenados todos los elementos que existen en el archivo con su tipo
+            y estructura respectivamente, así como datos simples, sin incluir los textos pero si sus posiciones
+            en la siguiente región. Inicia indicando la longitud en elementos que contiene la región, cada elemento 
+            se conforma por 3 conjuntos de 4 bytes. El primero será el identificador de qué tipo de dato es, el siguiente
+            suele ser su valor, y el tercero solo se usa en tipos de datos object, array y strings.
+        - Textos
+            Los textos usados por los elementos declarados como textos se ecnuentran almacenados en esta región.
+            Inicia declarando con 4 bytes en little endian el largo en bytes de toda la región, seguido de todos
+            los textos juntos, cada uno terminado con un byte nulo.
+        - Objetos sin cabeceras
+            Esta región indica aquellos elementos que no incluyen cabeceras, se usa para aquellos elementos que 
+            se encuentran dentro de una lista. Inicia indicando la longitud de elementos de la región, seguido del 
+            índice de aquel elemento que no tiene cabecera. Cada indicador se representa igualmente con 4 bytes en 
+            little endian.
+        - Posiciones de cabeceras
+            Aquí es donde se encuentra la información de cada cabecera y el índice del elemento al que pertenece. Inicia
+            con 4 bytes indicando la cantidad de elementos con los que cuenta, estos elementos a su vez tienen una longitud
+            de 3 conjuntos de 4 bytes. Los primeros 4 bytes son un checksum JOAAT del texto de la cabecera, los siguientes
+            son la posición del texto de la cabecera en la siguiente región, y el último conjunto es el índice del elemento
+            al que pertenece.
+        - Texto de las cabeceras
+            Esta región funciona igual que la región de los Textos. La única diferencia es que almacena el texto de las
+            cabeceras y no los valores que son strings.

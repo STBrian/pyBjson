@@ -15,10 +15,13 @@ def getHeaders(data: bytes):
     lenght = int.from_bytes(extract_chunk(data, pre_region_len + 1, 4, region_start), "little", signed=False)
     print(pre_region_len)
     print(lenght)
-    headers = [""] * lenght
+    headers = [""] * (lenght + pre_region_len)
     headers_text_start = region_start + (pre_region_len + 1) * 4 + (lenght) * 4 * 3 + 4
+    for i in range(pre_region_len):
+        idx = int.from_bytes(extract_chunk(data, i + 1, 4, region_start), "little", signed=False)
+        headers[idx - 1] = None
     for i in range(lenght):
-        idx = pre_region_len + 1 + (i) * 3 + 1
+        idx = pre_region_len + 1 + i * 3 + 1
         headers_idx = int.from_bytes(extract_chunk(data, idx + 1, 4, region_start), "little", signed=False)
         headers_idx_end = headers_text_start + 4 + headers_idx
         while True:
@@ -28,16 +31,11 @@ def getHeaders(data: bytes):
                 headers_idx_end += 1
         header_part = data[headers_text_start + 4 + headers_idx:headers_idx_end]
         header_idx = int.from_bytes(extract_chunk(data, idx + 2, 4, region_start), "little", signed=False) # Nota es distinto a headers_idx
-        if header_idx <= lenght:
-            headers[header_idx - 1] = header_part.decode('utf-8')
-        else:
-            for _ in range(header_idx - len(headers)):
-                headers.append("")
-            headers[header_idx - 1] = header_part.decode('utf-8')
+        headers[header_idx - 1] = header_part.decode('utf-8')
     return headers
 
 #filepath = Path(input("Introduce the name of the file: "))
-filepath = Path("blocks.bjson")
+filepath = Path("def_action_test.bjson")
 with open(filepath, "rb") as f:
     data_bytes = f.read()
 
