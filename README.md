@@ -3,10 +3,10 @@
 **This repository is for documentation on the format itself (written in both spanish and english).**
 
 ```
-El archivo está en little endian
-Se separa de 4 en 4 bytes
+El archivo está en little endian. Se separa de 4 en 4-Bytes.
+The file is in little endian, and is separated by 4-Bytes.
 
-Identificadores:
+Identificadores (Structure Identification):
     1 - Booleano         (Boolean)
     2 - Entero           (32-Bit Integer)
     3 - Flotante         (32-Bit Floating Point Integer)
@@ -34,34 +34,34 @@ Ejemplo (Example):
 
 -- Información específica (Information/Specsheet)
     Estructuras (Data Structures):
-        1 - Booleano
+        1 - Booleano (Boolean/Bool):
             Identificador                           - 01 00 00 00
             Valor                                   - (01 00 00 00) ó (00 00 00 00) True or False respectivamente (Respectively)
             Espacio vacío                           - 4 bytes nulos (4-Byte NULL Padding)
 
-        2 - Entero
+        2 - Entero (32-Bit Int):
             Identificador                           - 02 00 00 00
             Valor                                   - 4 bytes signed integrer little endian
             Espacio vacío                           - 4 bytes nulos (4-Byte NULL Padding)
 
-        3 - Flotante
+        3 - Flotante (32-Bit Floating Point Int):
             Identificador                           - 03 00 00 00
             Valor                                   - 4 bytes número en formato de 32 bits de punto flotante little endian
             Espacio vacío                           - 4 bytes nulos (4-Byte NULL Padding)
 
-        4 - Lista
+        4 - Lista (JSON List):
             Identificador                           - 04 00 00 00
             Longitud en objetos                     - 4 bytes unsigned integrer little endian
             Longitud final                          - 4 bytes que representan la suma de todos los elementos 
                                                         internos de aquellos elementos que se hayan cerrado 
                                                         antes que este y que sean del mismo tipo.
 
-        5 - Cadena de texto:
+        5 - Cadena de texto (Text):
             Identificador                           - 05 00 00 00
             Hash JOAAT (kind of)                    - 4 bytes little endian
             Posición del texto en región de textos  - 4 bytes unsigned integrer little endian
 
-        6 - Objeto
+        6 - Objeto (JSON Object):
             Identificador                           - 06 00 00 00
             Longitud en objetos                     - 4 bytes unsigned integrer little endian
             Longitud final                          - 4 bytes que representan la suma de todos los elementos 
