@@ -4,7 +4,7 @@
 
 ```
 El archivo está en little endian. Se separa de 4 en 4-Bytes.
-** The file/archive is in little endian, and is separated by 4-Bytes.
+** The file/archive is in little endian, and is separated by 4-Bytes per-region.
 
 Identificadores (Structure Identification):
     1 - Booleano         (Boolean)
