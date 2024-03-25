@@ -29,15 +29,19 @@ de la región.
         4 - Lista
             Identificador                           - 04 00 00 00
             Longitud en objetos                     - 4 bytes unsigned integrer little endian
-            Unknown                                 - 4 bytes
+            Longitud final                          - 4 bytes que representan la suma de todos los elementos 
+                                                        internos de aquellos elementos que se hayan cerrado 
+                                                        antes que este y que sean del mismo tipo.
         5 - Cadena de texto:
             Identificador                           - 05 00 00 00
-            Hash JOAAT                              - 4 bytes little endian
+            Hash JOAAT (kind of)                    - 4 bytes little endian
             Posición del texto en región de textos  - 4 bytes unsigned integrer little endian
         6 - Objeto
             Identificador                           - 06 00 00 00
             Longitud en objetos                     - 4 bytes unsigned integrer little endian
-            Unknown                                 - 4 bytes
+            Longitud final                          - 4 bytes que representan la suma de todos los elementos 
+                                                        internos de aquellos elementos que se hayan cerrado 
+                                                        antes que este y que sean del mismo tipo.
 
     Regiones:
         - Estructura
@@ -58,7 +62,7 @@ de la región.
         - Posiciones de cabeceras
             Aquí es donde se encuentra la información de cada cabecera y el índice del elemento al que pertenece. Inicia
             con 4 bytes indicando la cantidad de elementos con los que cuenta, estos elementos a su vez tienen una longitud
-            de 3 conjuntos de 4 bytes. Los primeros 4 bytes son un checksum JOAAT del texto de la cabecera, los siguientes
+            de 3 conjuntos de 4 bytes. Los primeros 4 bytes son un checksum JOAAT (kind of) del texto de la cabecera, los siguientes
             son la posición del texto de la cabecera en la siguiente región, y el último conjunto es el índice del elemento
             al que pertenece.
         - Texto de las cabeceras

@@ -7,6 +7,13 @@ def int_to_bytes(num: int, byteorder: str) -> bytes:
     else:
         raise ValueError(f"invalid byteorder '{byteorder}'")
 
+def uint_to_bytes(num: int, byteorder: str) -> bytes:
+    if byteorder == "big" or byteorder == "little":
+        binary_num = num.to_bytes(4, byteorder=byteorder, signed=False)
+        return binary_num
+    else:
+        raise ValueError(f"invalid byteorder '{byteorder}'")
+
 def bytes_to_int(bytes: bytearray, byteorder: str) -> int:
     if byteorder == "big" or byteorder == "little":
         int_num = int.from_bytes(bytes, byteorder=byteorder, signed=True)
@@ -35,3 +42,9 @@ def bytes_to_float(num: bytes, byteorder: str) -> float:
         raise ValueError(f"invalid byteorder '{byteorder}'")
         
     return decimal_num[0]
+
+def bool_to_int(value: bool):
+    if value == True:
+        return 1
+    else:
+        return 0
