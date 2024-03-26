@@ -59,6 +59,8 @@ de la región.
             se encuentran dentro de una lista. Inicia indicando la longitud de elementos de la región, seguido del 
             índice de aquel elemento que no tiene cabecera. Cada indicador se representa igualmente con 4 bytes en 
             little endian.
+            Parece que esta zona tiene un orden al agrupar elementos, mi idea es que primero ordena los elementos
+            que son enteros, luego otro tipo de elemento, luego otro, luego otro, luego otro, luego objetos
         - Posiciones de cabeceras
             Aquí es donde se encuentra la información de cada cabecera y el índice del elemento al que pertenece. Inicia
             con 4 bytes indicando la cantidad de elementos con los que cuenta, estos elementos a su vez tienen una longitud
