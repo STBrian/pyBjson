@@ -38,7 +38,7 @@ de la región.
 
         5 - Cadena de texto:
             Identificador                           - 05 00 00 00
-            Hash JOAAT (kind of)                    - 4 bytes little endian
+            Hash                                    - 4 bytes little endian
             Posición del texto en región de textos  - 4 bytes unsigned integrer little endian
 
         6 - Objeto
@@ -65,14 +65,15 @@ de la región.
             Esta región indica aquellos elementos que no incluyen cabeceras, se usa para aquellos elementos que 
             se encuentran dentro de una lista. Inicia indicando la longitud de elementos de la región, seguido del 
             índice de aquel elemento que no tiene cabecera. Cada indicador se representa igualmente con 4 bytes en 
-            little endian.
+            little endian. Se van agregando conforme las listas se vayan cerrando. Los elementos de la lista a su
+            vez se agregan en orden normal.
 
         - Posiciones de cabeceras
             Aquí es donde se encuentra la información de cada cabecera y el índice del elemento al que pertenece. Inicia
             con 4 bytes indicando la cantidad de elementos con los que cuenta, estos elementos a su vez tienen una longitud
-            de 3 conjuntos de 4 bytes. Los primeros 4 bytes son un checksum JOAAT (kind of) del texto de la cabecera, los siguientes
+            de 3 conjuntos de 4 bytes. Los primeros 4 bytes son un checksum del texto de la cabecera, los siguientes
             son la posición del texto de la cabecera en la siguiente región, y el último conjunto es el índice del elemento
-            al que pertenece.
+            al que pertenece. El orden en el que se van agregando elementos a esta zona se sigue investigando.
 
         - Texto de las cabeceras
             Esta región funciona igual que la región de los Textos. La única diferencia es que almacena el texto de las
