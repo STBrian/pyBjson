@@ -1,8 +1,8 @@
 import json, math, sys
-from conversions import *
+from .conversions import *
 from pathlib import Path
-from JOAAThash import getLittleJOAAThash
-from updateDatabase import MyDatabase
+from .JOAAThash import getLittleJOAAThash
+from .updateDatabase import MyDatabase
 
 def extract_chunk(data: bytes, idx: int, size: int = 4, start_from: int = 0):
     start = idx * size + start_from
@@ -39,9 +39,14 @@ def getHeaders(data: bytes, hash_database: MyDatabase):
         print(extract_chunk(data, idx, 4, region_start).hex(), extract_chunk(data, idx + 1, 4, region_start).hex(), extract_chunk(data, idx + 2, 4, region_start).hex(), header_decode)
     return headers
 
-def convertBjsonToJson(fp: str):
+def convertBjsonToJson(fp: str|Path):
     hash_database = MyDatabase("hash_database.json")
-    filepath = Path(fp)
+    if type(fp) == str:
+        filepath = Path(fp)
+    elif type(fp) == Path:
+        filepath = fp
+    else:
+        raise ValueError()
     with open(filepath, "rb") as f:
         data_bytes = f.read()
 
@@ -59,6 +64,7 @@ def convertBjsonToJson(fp: str):
         idx = i * 3 + 1
         type_extracted = int.from_bytes(extract_chunk(data_bytes, idx), "little", signed=False)
         if type_extracted == 6:
+            # Object data type
             if json_dict == None:
                 json_dict = {}
                 tmp = []
@@ -123,21 +129,32 @@ def convertBjsonToJson(fp: str):
                 hash_database.addToDatabase(text_decode, hashlist)
             tmp[3] += 1
         elif type_extracted == 4:
-            tmp = place_dir[-1]
-            dir = tmp[0]
-            # Header
-            dir[f"{headers[i-1]}"] = []
-            tmp2 = []
-            # Header in tmp
-            tmp2.append(dir[f"{headers[i-1]}"])
-            tmp2.append("list")
-            tmp2.append(int.from_bytes(extract_chunk(data_bytes, idx + 1), "little", signed=False))
-            tmp2.append(0)
-            place_dir.append(tmp2)
-            tmp[3] += 1
-            if tmp[3] >= tmp[2]:
-                place_dir.pop(-2)
+            # Array data type
+            if json_dict == None:
+                json_dict = []
+                tmp = []
+                tmp.append(json_dict)
+                tmp.append("list")
+                tmp.append(int.from_bytes(extract_chunk(data_bytes, idx + 1), "little", signed=False))
+                tmp.append(0)
+                place_dir.append(tmp)
+            else:
+                tmp = place_dir[-1]
+                dir = tmp[0]
+                # Header
+                dir[f"{headers[i-1]}"] = []
+                tmp2 = []
+                # Header in tmp
+                tmp2.append(dir[f"{headers[i-1]}"])
+                tmp2.append("list")
+                tmp2.append(int.from_bytes(extract_chunk(data_bytes, idx + 1), "little", signed=False))
+                tmp2.append(0)
+                place_dir.append(tmp2)
+                tmp[3] += 1
+                if tmp[3] >= tmp[2]:
+                    place_dir.pop(-2)
         elif type_extracted == 3:
+            # Float data type
             tmp = place_dir[-1]
             dir = tmp[0]
             if tmp[1] == "array":
@@ -149,6 +166,7 @@ def convertBjsonToJson(fp: str):
                 dir.append(float("{:.2f}".format(float_num)))
             tmp[3] += 1
         elif type_extracted == 2:
+            # Integer data type
             tmp = place_dir[-1]
             dir = tmp[0]
             if tmp[1] == "array":
@@ -158,6 +176,7 @@ def convertBjsonToJson(fp: str):
                 dir.append(bytes_to_int(extract_chunk(data_bytes, idx + 1), "little"))
             tmp[3] += 1
         elif type_extracted == 1:
+            # Boolean data type
             tmp = place_dir[-1]
             dir = tmp[0]
             if tmp[1] == "array":
@@ -174,6 +193,16 @@ def convertBjsonToJson(fp: str):
                 elif bool_num == 1:
                     dir.append(True)
             tmp[3] += 1
+        elif type_extracted == 0:
+            # None data type
+            tmp = place_dir[-1]
+            dir = tmp[0]
+            if tmp[1] == "array":
+                # With header
+                dir[f"{headers[i-1]}"] = None
+            elif tmp[1] == "list":
+                dir.append(None)
+            tmp[3] += 1
 
         if len(place_dir) > 0:
             check = place_dir[-1]
@@ -182,9 +211,7 @@ def convertBjsonToJson(fp: str):
 
     json_string = json.dumps(json_dict, indent=4)
 
-    with open(f"{filepath.stem}_converted.json", "w", encoding='utf-8') as f:
-        f.write(json_string)
-    hash_database.save()
+    return json_string
 
 def addObject(sdata: list, tdata: list, nhdata: list, hdata: list, htdata: list, header: str | None, data: dict, obj_close: int = 0, list_close: int = 0, g_count = 0, hashdb: MyDatabase = None):
     tmp_nhdata = []
@@ -396,8 +423,3 @@ def convertJsonToBjson(fp: str):
 
     with open(f"{filepath.stem}_converted.bjson", "wb") as f:
         f.write(bytearray(output_data))
-
-if __name__ == "__main__":
-    name = "mobs"
-    convertBjsonToJson(f"{name}.bjson")
-    convertJsonToBjson(f"{name}_converted.json")
