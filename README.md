@@ -1,7 +1,5 @@
-# MC3DS-Blang
-**Minecraft 3DS has a format inside of the ROMFS called .bjson.**
-
-**This repository is for documentation on the format itself (written in both spanish and english).**
+# pyBjson
+A binary json file used in MC3DS Edition
 
 ```
 El archivo está en little endian. Se separa de 4 en 4-Bytes.
