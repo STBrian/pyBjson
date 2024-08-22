@@ -102,9 +102,10 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
         headers[no_header_idx - 1] = None
         
     for i in range(headers_region_lenght):
-        hash = extract_chunk(data, i + 1, 4, headers_region_start)
+        idx = (i * 3) + 1
+        hash = extract_chunk(data, idx, 4, headers_region_start)
 
-        header_text_start = headers_text_region_start + int.from_bytes(extract_chunk(data, i + 2, 4, headers_region_start), "little", signed=False)
+        header_text_start = headers_text_region_start + int.from_bytes(extract_chunk(data, idx + 1, 4, headers_region_start), "little", signed=False)
         header_text_end = header_text_start
         while data[header_text_end] != 0:
             header_text_end += 1
@@ -112,12 +113,12 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
         header_text_raw = data[header_text_start:header_text_end]
         header_text_decode = header_text_raw.decode('utf-8')
 
-        header_idx = int.from_bytes(extract_chunk(data, i + 3, 4, headers_region_start), "little", signed=False)
+        header_idx = int.from_bytes(extract_chunk(data, idx + 2, 4, headers_region_start), "little", signed=False)
         headers[header_idx - 1] = header_text_decode
         hash_database.addHashToDatabase(header_text_decode, hash)
 
         if debug_messages:
-            print("[Info]", extract_chunk(data, i + 1, 4, headers_region_start).hex(), extract_chunk(data, i + 2, 4, headers_region_start).hex(), extract_chunk(data, i + 3, 4, headers_region_start).hex(), header_text_decode)
+            print("[Info]", extract_chunk(data, idx, 4, headers_region_start).hex(), extract_chunk(data, idx + 1, 4, headers_region_start).hex(), extract_chunk(data, idx + 2, 4, headers_region_start).hex(), header_text_decode)
 
     return headers
 
