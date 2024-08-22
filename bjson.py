@@ -39,7 +39,7 @@ class BJSONHashDatabase():
             else:
                 raise TypeError("'fp' must be str or Path type")
         else:
-            self.json_data = None
+            self.json_data = {}
             
     def open(self, fp: str|Path|None):
         if type(fp) == str or type(fp) == Path:
