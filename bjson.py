@@ -95,6 +95,8 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
 
     for i in range(no_headers_region_lenght):
         no_header_idx = int.from_bytes(extract_chunk(data, i + 1, 4, no_headers_region_start), "little", signed=False)
+        if debug_messages:
+            print(f"[Info] No Header Index: {no_header_idx}")
         headers[no_header_idx - 1] = None
         
     for i in range(headers_region_lenght):
@@ -109,6 +111,8 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
         header_text_decode = header_text_raw.decode('utf-8')
 
         header_idx = int.from_bytes(extract_chunk(data, i + 3, 4, headers_region_start), "little", signed=False)
+        if debug_messages:
+            print(f"[Info] Header Index: {header_idx}")
         headers[header_idx - 1] = header_text_decode
         hash_database.addHashToDatabase(header_text_decode, hash)
 
