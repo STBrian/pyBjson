@@ -84,7 +84,7 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
     text_region_start = (int.from_bytes(extract_chunk(data, 0), "little", signed=False) * 3 * 4) + 4
     text_region_lenght = int.from_bytes(extract_chunk(data, 0, 4, text_region_start), "little", signed=False)
 
-    no_headers_region_start = text_region_start + text_region_lenght
+    no_headers_region_start = text_region_start + text_region_lenght + 4
     no_headers_region_lenght = int.from_bytes(extract_chunk(data, 0, 4, no_headers_region_start), "little", signed=False)
     if debug_messages:
         print(f"[Info] No Header Lenght: {no_headers_region_lenght}")
