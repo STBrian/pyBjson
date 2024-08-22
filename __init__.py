@@ -1,1 +1,3 @@
-from .bjson import *
+from .bjsontojson_legacy import convertBjsonToJson_legacy
+from .jsontobjson_legacy import convertJsonToBjson_legacy
+from .bjson import BJSON, convertBjsonToJson, convertJsonToBjson

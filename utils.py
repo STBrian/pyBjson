@@ -1,5 +1,9 @@
 import struct
 
+def extract_chunk(data: bytes, idx: int, size: int = 4, start_from: int = 0):
+    start = idx * size + start_from
+    return data[start:start + size]
+
 def int_to_bytes(num: int, byteorder: str) -> bytes:
     if byteorder == "big" or byteorder == "little":
         binary_num = num.to_bytes(4, byteorder=byteorder, signed=True)
