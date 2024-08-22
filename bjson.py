@@ -94,7 +94,7 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
     if debug_messages:
         print(f"[Info] Header Lenght: {headers_region_lenght}")
 
-    headers_text_region_start = headers_region_start + (headers_region_lenght * 3 * 4) + 4
+    headers_text_region_start = headers_region_start + (headers_region_lenght * 3 * 4) + 8
     headers = [""] * (headers_region_lenght + no_headers_region_lenght)
 
     for i in range(no_headers_region_lenght):
