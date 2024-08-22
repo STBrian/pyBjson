@@ -6,11 +6,11 @@ from .jsontobjson_legacy import convertJsonToBjson_legacy
 
 debug_messages = False
 
-def enableDebugMessages():
+def enableBJSONDebugMessages():
     global debug_messages
     debug_messages = True
 
-def disableDebugMessages():
+def disableBJSONDebugMessages():
     global debug_messages
     debug_messages = False
 
@@ -84,7 +84,7 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
     text_region_start = (int.from_bytes(extract_chunk(data, 0), "little", signed=False) * 3 * 4) + 4
     text_region_lenght = int.from_bytes(extract_chunk(data, 0, 4, text_region_start), "little", signed=False)
 
-    no_headers_region_start = text_region_start + text_region_lenght + 4
+    no_headers_region_start = text_region_start + text_region_lenght
     no_headers_region_lenght = int.from_bytes(extract_chunk(data, 0, 4, no_headers_region_start), "little", signed=False)
 
     headers_region_start = no_headers_region_start + (no_headers_region_lenght * 4) + 4
@@ -113,7 +113,7 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
         hash_database.addHashToDatabase(header_text_decode, hash)
 
         if debug_messages:
-            print(extract_chunk(data, i + 1, 4, headers_region_start).hex(), extract_chunk(data, i + 2, 4, headers_region_start).hex(), extract_chunk(data, i + 3, 4, headers_region_start).hex(), header_text_decode)
+            print("[Info]", extract_chunk(data, i + 1, 4, headers_region_start).hex(), extract_chunk(data, i + 2, 4, headers_region_start).hex(), extract_chunk(data, i + 3, 4, headers_region_start).hex(), header_text_decode)
 
     return headers
 
