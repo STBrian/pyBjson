@@ -101,7 +101,7 @@ def getHeaders(data: bytes, hash_database: BJSONHashDatabase):
         hash = extract_chunk(data, i + 1, 4, headers_region_start)
 
         header_text_start = headers_text_region_start + int.from_bytes(extract_chunk(data, i + 2, 4, headers_region_start), "little", signed=False)
-        header_text_end = headers_text_region_start + header_text_start
+        header_text_end = header_text_start
         while data[header_text_end] != 0:
             header_text_end += 1
 
