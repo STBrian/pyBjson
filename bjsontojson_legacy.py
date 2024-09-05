@@ -34,7 +34,7 @@ def getHeaders(data: bytes, hash_database: MyDatabase):
         print(extract_chunk(data, idx, 4, region_start).hex(), extract_chunk(data, idx + 1, 4, region_start).hex(), extract_chunk(data, idx + 2, 4, region_start).hex(), header_decode)
     return headers
 
-def convertBjsonToJson_legacy(fp: str|Path):
+def convertBjsonToJson_legacy(fp: str|Path|None):
     hash_database = MyDatabase("hash_database.json")
     if type(fp) == str:
         filepath = Path(fp)
@@ -198,6 +198,8 @@ def convertBjsonToJson_legacy(fp: str|Path):
             elif tmp[1] == "list":
                 dir.append(None)
             tmp[3] += 1
+        else:
+            return
 
         if len(place_dir) > 0:
             check = place_dir[-1]
