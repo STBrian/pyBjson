@@ -4,6 +4,7 @@ from pathlib import Path
 from .updateDatabase import MyDatabase
 
 def getHeaders(data: bytes, hash_database: MyDatabase):
+    count = 0
     text_region_start = (int.from_bytes(extract_chunk(data, 0), "little", signed=False) * 3 * 4) + 4
     lenght_text_r = int.from_bytes(extract_chunk(data, 0, 4, text_region_start), "little", signed=False)
     region_start = text_region_start + lenght_text_r + 4
@@ -31,7 +32,9 @@ def getHeaders(data: bytes, hash_database: MyDatabase):
         header_decode = header_part.decode('utf-8')
         headers[header_idx - 1] = header_decode
         hash_database.addToDatabase(header_decode, hashlist)
-        print(extract_chunk(data, idx, 4, region_start).hex(), extract_chunk(data, idx + 1, 4, region_start).hex(), extract_chunk(data, idx + 2, 4, region_start).hex(), header_decode)
+        if count < 20:
+            print(int.from_bytes(extract_chunk(data, idx, 4, region_start), "little"), extract_chunk(data, idx + 1, 4, region_start).hex(), extract_chunk(data, idx + 2, 4, region_start).hex(), header_decode)
+        count += 1
     return headers
 
 def convertBjsonToJson_legacy(fp: str|Path|None):
