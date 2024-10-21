@@ -1,7 +1,11 @@
 import json
-from .utils import *
+try:
+    from .utils import *
+    from .updateDatabase import MyDatabase
+except:
+    from utils import *
+    from updateDatabase import MyDatabase
 from pathlib import Path
-from .updateDatabase import MyDatabase
 
 def getHeaders(data: bytes, hash_database: MyDatabase):
     count = 0
@@ -19,7 +23,7 @@ def getHeaders(data: bytes, hash_database: MyDatabase):
         headers[idx - 1] = None
     for i in range(lenght):
         idx = pre_region_len + 1 + i * 3 + 1
-        hashlist = list(extract_chunk(data, idx, 4, region_start))
+        hashval = int.from_bytes(extract_chunk(data, idx, 4, region_start), "little")
         headers_idx = int.from_bytes(extract_chunk(data, idx + 1, 4, region_start), "little", signed=False)
         headers_idx_end = headers_text_start + 4 + headers_idx
         while True:
@@ -31,10 +35,10 @@ def getHeaders(data: bytes, hash_database: MyDatabase):
         header_idx = int.from_bytes(extract_chunk(data, idx + 2, 4, region_start), "little", signed=False) # Nota es distinto a headers_idx
         header_decode = header_part.decode('utf-8')
         headers[header_idx - 1] = header_decode
-        hash_database.addToDatabase(header_decode, hashlist)
-        if count < 20:
+        hash_database.addToDatabase(header_decode, hashval)
+        if count < 30:
             print(int.from_bytes(extract_chunk(data, idx, 4, region_start), "little"), extract_chunk(data, idx + 1, 4, region_start).hex(), extract_chunk(data, idx + 2, 4, region_start).hex(), header_decode)
-        count += 1
+            count += 1
     return headers
 
 def convertBjsonToJson_legacy(fp: str|Path|None):
@@ -99,7 +103,7 @@ def convertBjsonToJson_legacy(fp: str|Path|None):
             tmp = place_dir[-1]
             dir = tmp[0]
             if tmp[1] == "array":
-                hashlist = list(extract_chunk(data_bytes, idx + 1))
+                hashval = int.from_bytes(extract_chunk(data_bytes, idx + 1), "little")
                 text_idx = int.from_bytes(extract_chunk(data_bytes, idx + 2), "little", signed=False)
                 text_idx_end = ((text_region_idx + 1) * 4) + text_idx
                 while True:
@@ -111,7 +115,7 @@ def convertBjsonToJson_legacy(fp: str|Path|None):
                 # Header
                 text_decode = text_part.decode("utf-8")
                 dir[f"{headers[i-1]}"] = text_decode
-                hash_database.addToDatabase(text_decode, hashlist)
+                hash_database.addToDatabase(text_decode, hashval)
             elif tmp[1] == "list":
                 hashlist = list(extract_chunk(data_bytes, idx + 1))
                 text_idx = int.from_bytes(extract_chunk(data_bytes, idx + 2), "little", signed=False)
@@ -210,5 +214,6 @@ def convertBjsonToJson_legacy(fp: str|Path|None):
                 place_dir.pop(-1)
 
     json_string = json.dumps(json_dict, indent=4)
-
+    
+    hash_database.save()
     return json_string

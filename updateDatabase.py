@@ -14,10 +14,10 @@ class MyDatabase():
         with open(self.filepath, "w", encoding="utf-8") as f:
             f.write(json.dumps(self.json_data, indent=4))
 
-    def addToDatabase(self, text: str, hashlist: list) -> None:
-        self.json_data[text] = hashlist
+    def addToDatabase(self, text: str, hashval: int) -> None:
+        self.json_data[text] = hashval
 
-    def getValue(self, key: str) -> list:
+    def getValue(self, key: str) -> int:
         with open(self.filepath, "r", encoding="utf-8") as f:
             json_data = json.loads(f.read())
         if key in json_data:
