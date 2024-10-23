@@ -2,6 +2,7 @@ El archivo está en little endian
 Se separa de 4 en 4 bytes
 
 Identificadores:
+    0 - null
     1 - Booleano
     2 - Entero
     3 - Flotante
@@ -14,6 +15,10 @@ de la región.
 
 -- Información específica
     Estructuras:
+        0 - null
+            Identificador                           - 00 00 00 00
+            Valor                                   - 00 00 00 00
+            Empty                                   - 00 00 00 00
         1 - Booleano
             Identificador                           - 01 00 00 00
             Valor                                   - (01 00 00 00) ó (00 00 00 00) True or False respectivamente

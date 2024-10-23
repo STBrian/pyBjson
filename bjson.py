@@ -1,242 +1,164 @@
-import json, math, os
-from .utils import *
+import io
+import json
+import struct
 from pathlib import Path
-from .bjsontojson_legacy import convertBjsonToJson_legacy
-from .jsontobjson_legacy import convertJsonToBjson_legacy
+from typing import BinaryIO
+from dataclasses import dataclass
 
-debug_messages = False
+try:
+    from .updateDatabase import MyDatabase
+except:
+    from updateDatabase import MyDatabase
 
-def enableBJSONDebugMessages():
-    global debug_messages
-    debug_messages = True
+class StructureError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
 
-def disableBJSONDebugMessages():
-    global debug_messages
-    debug_messages = False
-
-def convertBjsonToJson(fp: str|Path):
-    #print("[Warning] 'convertBjsonToJson' function is deprecated and will be removed in future versions")
-    return convertBjsonToJson_legacy(fp)
-
-def convertJsonToBjson(fp: str) -> (tuple[bool, int]):
-    #print("[Warning] 'convertJsonToBjson' function is deprecated and will be removed in future versions")
-    return convertJsonToBjson_legacy(fp)
-
-class BJSONHashDatabase():
-    def __init__(self, fp: str|Path|None = None):
-        if fp != None:
-            if type(fp) == str or type(fp) == Path:
-                if type(fp) == str:
-                    self.fp = Path(fp)
-                else:
-                    self.fp = fp
-
-                if os.path.exists(self.fp):
-                    with open(self.fp, "r", encoding="utf-8") as f:
-                        self.json_data = json.loads(f.read())
-                else:
-                    raise FileNotFoundError()
-            else:
-                raise TypeError("'fp' must be str or Path type")
-        else:
-            self.json_data = {}
-            
-    def open(self, fp: str|Path|None):
-        if type(fp) == str or type(fp) == Path:
-            if type(fp) == str:
-                self.fp = Path(fp)
-            else:
-                self.fp = fp
-
-            if os.path.exists(self.fp):
-                with open(self.fp, "r", encoding="utf-8") as f:
-                    self.json_data = json.loads(f.read())
-            else:
-                raise FileNotFoundError()
-        else:
-            raise TypeError("'fp' must be str or Path type")
-            
-    def save(self):
-        with open(self.fp, "w", encoding="utf-8") as f:
-            f.write(json.dumps(self.json_data, indent=4))
-
-    def addHashToDatabase(self, text: str, hash: bytes | list) -> None:
-        if type(hash) == bytes:
-            self.json_data[text] = list(hash)
-        elif type(hash) == list:
-            self.json_data[text] = hash
-        else:
-            raise TypeError("'hash' must be bytes or list")
-
-    def getHash(self, key: str) -> (bytes | None):
-        if self.json_data != None:
-            if key in self.json_data:
-                if type(self.json_data[key]) == list:
-                    return bytes(self.json_data[key])
-                else:
-                    raise Exception(f"Unexpected hash type in database for {key}")
-            else:
-                return None
-
-def getBJSONHeaders(data: bytes, hash_database: BJSONHashDatabase):
-    global debug_messages
-
-    text_region_start = (int.from_bytes(extract_chunk(data, 0), "little", signed=False) * 3 * 4) + 4
-    text_region_lenght = int.from_bytes(extract_chunk(data, 0, 4, text_region_start), "little", signed=False)
-
-    no_headers_region_start = text_region_start + text_region_lenght + 4
-    no_headers_region_lenght = int.from_bytes(extract_chunk(data, 0, 4, no_headers_region_start), "little", signed=False)
-    if debug_messages:
-        print(f"[Info] No Header Lenght: {no_headers_region_lenght}")
-
-    headers_region_start = no_headers_region_start + (no_headers_region_lenght * 4) + 4
-    headers_region_lenght = int.from_bytes(extract_chunk(data, 0, 4, headers_region_start), "little", signed=False)
-    if debug_messages:
-        print(f"[Info] Header Lenght: {headers_region_lenght}")
-
-    headers_text_region_start = headers_region_start + (headers_region_lenght * 3 * 4) + 8
-    headers = [""] * (headers_region_lenght + no_headers_region_lenght)
-
-    for i in range(no_headers_region_lenght):
-        no_header_idx = int.from_bytes(extract_chunk(data, i + 1, 4, no_headers_region_start), "little", signed=False)
-        headers[no_header_idx - 1] = None
-        
-    for i in range(headers_region_lenght):
-        idx = (i * 3) + 1
-        hash = extract_chunk(data, idx, 4, headers_region_start)
-
-        header_text_start = headers_text_region_start + int.from_bytes(extract_chunk(data, idx + 1, 4, headers_region_start), "little", signed=False)
-        header_text_end = header_text_start
-        while data[header_text_end] != 0:
-            header_text_end += 1
-
-        header_text_raw = data[header_text_start:header_text_end]
-        header_text_decode = header_text_raw.decode('utf-8')
-
-        header_idx = int.from_bytes(extract_chunk(data, idx + 2, 4, headers_region_start), "little", signed=False)
-        headers[header_idx - 1] = header_text_decode
-        hash_database.addHashToDatabase(header_text_decode, hash)
-
-        if debug_messages:
-            print("[Info]", extract_chunk(data, idx, 4, headers_region_start).hex(), extract_chunk(data, idx + 1, 4, headers_region_start).hex(), extract_chunk(data, idx + 2, 4, headers_region_start).hex(), header_text_decode)
-
-    return headers
-
-def getObject(object: dict | list, file_data, n_objects: int, headers, text_region_start) -> int:
-    if type(object) == dict or type(object) == list:
-        new_object = {}
-        idx = n_objects * 3 + 1
-        structure_lenght = int.from_bytes(extract_chunk(file_data, idx + 1), "little", signed=False)
-        if type(object) == dict:
-            new_object_header = headers[n_objects]
-        n_objects += 1
-
-        for i in range(structure_lenght):
-            idx = n_objects * 3 + 1
-
-            data_type = int.from_bytes(extract_chunk(file_data, idx), "little", signed=False)
-            if data_type == 6:
-                # JSON Object type
-                n_objects = getObject(new_object, file_data, n_objects, headers, text_region_start)
-            elif data_type == 5:
-                # JSON String type
-                n_objects = getString(new_object, file_data, n_objects, headers, text_region_start)
-            elif data_type == 4:
-                # JSON Array type
-                pass
-
-        if type(object) == dict:
-            object[new_object_header] = new_object
-        elif type(object) == list:
-            object.append(new_object)
-        else:
-            raise TypeError("'object' must be dict or list")
-    
-        return n_objects
-    else:
-        raise TypeError("'object' must be dict or list")
-
-def getString(object: dict | list, file_data: bytes, n_objects: int, headers: list, text_region_start: int) -> int:
-    if type(object) == dict or type(object) == list:
-        idx = n_objects * 3 + 1
-        if type(object) == dict:
-            object_header = headers[n_objects]
-        n_objects += 1
-
-        text_idx = int.from_bytes(extract_chunk(file_data, idx + 2), "little", signed=False)
-        text_start = text_region_start + text_idx
-        text_end = text_start
-        while (file_data[text_end] != 0):
-            text_end += 1
-
-        text_raw = file_data[text_start:text_end]
-        text_decode = text_raw.decode('utf-8')
-
-        if type(object) == dict:
-            object[object_header] = text_decode
-        elif type(object) == list:
-            object.append(text_decode)
-        else:
-            raise TypeError("'object' must be dict or list")
-    
-        return n_objects
-    else:
-        raise TypeError("'object' must be dict or list")
-
-class BJSONEntry:
+class StructEntry:
     def __init__(self):
         pass
 
-class BJSON:
+    def parseElement(self, file: BinaryIO):
+        self.data_type = int.from_bytes(file.read(4), "little")
+        raw_data1 = file.read(4)
+        raw_data2 = file.read(4)
+        if len(raw_data1) == 0 or len(raw_data2) == 0:
+            raise ValueError("Unexpected empty value while reading structure")
+        match self.data_type:
+            case 0:
+                # null value
+                self.value1 = None
+                self.value2 = 0
+            case 1:
+                # boolean value
+                raw_data1 = int.from_bytes(raw_data1, "little")
+                if raw_data1 == 1:
+                    self.value1 = True
+                else:
+                    self.value1 = False
+                self.value2 = 0
+            case 2:
+                # integer value
+                self.value1 = int.from_bytes(raw_data1, "little", signed=True)
+                self.value2 = 0
+            case 3:
+                # float value
+                self.value1 = float("{:.5f}".format(struct.unpack('<f', raw_data1)[0]))
+                self.value2 = 0
+            case 4:
+                # array type
+                self.value1 = int.from_bytes(raw_data1, "little")
+                self.value2 = int.from_bytes(raw_data2, "little")
+            case 5:
+                # array type
+                self.value1 = int.from_bytes(raw_data1, "little")
+                self.value2 = int.from_bytes(raw_data2, "little")
+            case 6:
+                # array type
+                self.value1 = int.from_bytes(raw_data1, "little")
+                self.value2 = int.from_bytes(raw_data2, "little")
+
+@dataclass
+class BJSONRegions:
+    structre: list
+    joinedStrings: bytes
+    arrayIndexes: list
+    headerIndexes: list
+    joinedHeaderStrings: bytes
+
+@dataclass
+class Tracking:
+    item_idx: int
+    db: MyDatabase
+
+class HeaderEntry:
     def __init__(self):
         pass
 
-    def open(self, fp: str|Path):
-        global debug_messages
+    def parseHeader(self, file: BinaryIO):
+        self.stringHash = int.from_bytes(file.read(4), "little")
+        self.stringPosition = int.from_bytes(file.read(4), "little")
+        self.headerIndex = int.from_bytes(file.read(4), "little")
 
-        if type(fp) == str:
-            filepath = Path(fp)
-        elif type(fp) == Path:
-            filepath = fp
-        else:
-            raise ValueError()
+        if self.headerIndex <= 0:
+            raise StructureError(f"Unexpected header index found at: {file.tell()}")
+
+try:
+    from .bjsonToJson import *
+except:
+    from bjsonToJson import *
+
+class BJSONFile:
+    def open(self, path: str | Path):
+        if isinstance(path, str):
+            path = Path(path)
+        elif not isinstance(path, Path):
+            raise TypeError("path expected to be 'str' or 'Path'")
         
-        with open(filepath, "rb") as f:
-            file_bytes = f.read()
-
-        content_struct = None
-        hash_db = BJSONHashDatabase()
-
-        if debug_messages:
-            print("[Info] Getting BJSON headers")
-
-        headers = getBJSONHeaders(file_bytes, hash_db)
-        n_structure_objects = int.from_bytes(extract_chunk(file_bytes, 0), "little", signed=False)
-        text_region_start = (n_structure_objects * 3 * 4) + 8
-
-        if debug_messages:
-            print("[Info] Getting BJSON structure")
-
-        data_type = int.from_bytes(extract_chunk(file_bytes, 1), "little", signed=False)
-        if data_type == 6:
-            # JSON Object type
-            content_struct = {}
-            structure_lenght = int.from_bytes(extract_chunk(file_bytes, 2), "little", signed=False)
-        elif data_type == 4:
-            # JSON Array type
-            content_struct = []
-            structure_lenght = int.from_bytes(extract_chunk(file_bytes, 2), "little", signed=False)
+        if not path.exists():
+            raise Exception("path doesn't exists")
         else:
-            raise Exception("Unexpected structure opening value")
-        
-        n_objects = 1
-        for i in range(structure_lenght):
-            idx = n_objects * 3 + 1
+            with open(path, "rb") as f:
+                self.data = io.BytesIO(f.read())
+        return self
 
-            data_type = int.from_bytes(extract_chunk(file_bytes, idx), "little", signed=False)
-            if data_type == 6:
-                # JSON Object type
-                n_objects = getObject(content_struct, file_bytes, n_objects, headers, text_region_start)
-            elif data_type == 5:
-                # JSON String type
-                n_objects = getString(content_struct, file_bytes, n_objects, headers, text_region_start)
+    def load(self, data: bytes | bytearray):
+        if isinstance(data, bytes) or isinstance(data, bytearray):
+            self.data = io.BytesIO(data)
+        else:
+            raise TypeError("data expected to be 'bytes' or 'bytearray'")
+        return self
+
+    def toJson(self, showDebug: bool = False):
+        if showDebug:
+            print("Getting structure")
+        total_elements = int.from_bytes(self.data.read(4), "little")
+        structEntries = []
+        for i in range(total_elements):
+            entry = StructEntry()
+            entry.parseElement(self.data)
+            structEntries.append(entry)
+
+        if showDebug:
+            print("Getting strings")
+        lenght_strings = int.from_bytes(self.data.read(4), "little")
+        joinedStrings = self.data.read(lenght_strings)
+        
+        if showDebug:
+            print("Getting index for array items")
+        total_array_items = int.from_bytes(self.data.read(4), "little")
+        arrayIndexes = []
+        for i in range(total_array_items):
+            arrayIndexes.append(int.from_bytes(self.data.read(4), "little"))
+            if arrayIndexes[-1] <= 0:
+                raise StructureError(f"Unexpected array index found at: {self.data.tell()}")
+
+        if showDebug:
+            print("Getting index for headers")
+        total_header_items = int.from_bytes(self.data.read(4), "little")
+        headerIndexes = []
+        for i in range(total_header_items):
+            headerEntry = HeaderEntry()
+            headerEntry.parseHeader(self.data)
+            headerIndexes.append(headerEntry)
+
+        if showDebug:
+            print("Getting strings for headers")
+        lenght_headers_strings = int.from_bytes(self.data.read(4), "little")
+        joinedHeadersStrings = self.data.read(lenght_headers_strings)
+
+        if showDebug:
+            print("Assembling structure")
+        track = Tracking(0, MyDatabase("./hash_database.json"))
+        bjsonRegions = BJSONRegions(structEntries, joinedStrings, arrayIndexes, headerIndexes, joinedHeadersStrings)
+        entry: StructEntry = bjsonRegions.structre.pop(0)
+        if entry.data_type == 6:
+            root = {}
+            parseObject(root, entry, bjsonRegions, track)
+        elif entry.data_type == 4:
+            root = []
+            parseArray(root, entry, bjsonRegions, track)
+        else:
+            raise StructureError(f"Data type {entry.data_type} is unknown or shouldn't go first in file. Expected 6 (object) or 4 (array)")
+
+        return json.dumps(root, ensure_ascii=False, indent=4)
