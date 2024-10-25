@@ -1,8 +1,8 @@
 from typing import List
 try:
-    from .bjson import StructEntry, BJSONRegions, Tracking, HeaderEntry, StructureError
+    from .bjsonStructures import Tracking, StructEntry, BJSONRegions, StructureError, HeaderEntry
 except:
-    from bjson import StructEntry, BJSONRegions, Tracking, HeaderEntry, StructureError
+    from bjsonStructures import Tracking, StructEntry, BJSONRegions, StructureError, HeaderEntry
 
 def searchForHeader(headerIndexes: List[HeaderEntry], index: int) -> HeaderEntry | None:
     for i, element in enumerate(headerIndexes):

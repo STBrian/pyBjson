@@ -1,92 +1,17 @@
 import io
 import json
-import struct
 from pathlib import Path
-from typing import BinaryIO
-from dataclasses import dataclass
 
 try:
+    from .bjsonStructures import StructEntry, StructureError, HeaderEntry, Tracking, BJSONRegions
+    from .bjsonToJson import parseObject, parseArray
+    from .jsonTobjson import addObject, addList
     from .updateDatabase import MyDatabase
 except:
+    from bjsonStructures import StructEntry, StructureError, HeaderEntry, Tracking, BJSONRegions
+    from bjsonToJson import parseObject, parseArray
+    from jsonTobjson import addObject, addList
     from updateDatabase import MyDatabase
-
-class StructureError(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
-
-class StructEntry:
-    def __init__(self):
-        pass
-
-    def parseElement(self, file: BinaryIO):
-        self.data_type = int.from_bytes(file.read(4), "little")
-        raw_data1 = file.read(4)
-        raw_data2 = file.read(4)
-        if len(raw_data1) == 0 or len(raw_data2) == 0:
-            raise ValueError("Unexpected empty value while reading structure")
-        match self.data_type:
-            case 0:
-                # null value
-                self.value1 = None
-                self.value2 = 0
-            case 1:
-                # boolean value
-                raw_data1 = int.from_bytes(raw_data1, "little")
-                if raw_data1 == 1:
-                    self.value1 = True
-                else:
-                    self.value1 = False
-                self.value2 = 0
-            case 2:
-                # integer value
-                self.value1 = int.from_bytes(raw_data1, "little", signed=True)
-                self.value2 = 0
-            case 3:
-                # float value
-                self.value1 = float("{:.5f}".format(struct.unpack('<f', raw_data1)[0]))
-                self.value2 = 0
-            case 4:
-                # array type
-                self.value1 = int.from_bytes(raw_data1, "little")
-                self.value2 = int.from_bytes(raw_data2, "little")
-            case 5:
-                # array type
-                self.value1 = int.from_bytes(raw_data1, "little")
-                self.value2 = int.from_bytes(raw_data2, "little")
-            case 6:
-                # array type
-                self.value1 = int.from_bytes(raw_data1, "little")
-                self.value2 = int.from_bytes(raw_data2, "little")
-
-@dataclass
-class BJSONRegions:
-    structre: list
-    joinedStrings: bytes
-    arrayIndexes: list
-    headerIndexes: list
-    joinedHeaderStrings: bytes
-
-@dataclass
-class Tracking:
-    item_idx: int
-    db: MyDatabase
-
-class HeaderEntry:
-    def __init__(self):
-        pass
-
-    def parseHeader(self, file: BinaryIO):
-        self.stringHash = int.from_bytes(file.read(4), "little")
-        self.stringPosition = int.from_bytes(file.read(4), "little")
-        self.headerIndex = int.from_bytes(file.read(4), "little")
-
-        if self.headerIndex <= 0:
-            raise StructureError(f"Unexpected header index found at: {file.tell()}")
-
-try:
-    from .bjsonToJson import *
-except:
-    from bjsonToJson import *
 
 class BJSONFile:
     def open(self, path: str | Path):
@@ -108,8 +33,14 @@ class BJSONFile:
         else:
             raise TypeError("data expected to be 'bytes' or 'bytearray'")
         return self
+    
+    def getData(self):
+        self.data.seek(0)
+        data = self.data.read()
+        self.data.seek(0)
+        return data
 
-    def toJson(self, showDebug: bool = False):
+    def toPython(self, showDebug: bool = False) -> dict | list:
         if showDebug:
             print("Getting structure")
         total_elements = int.from_bytes(self.data.read(4), "little")
@@ -149,7 +80,7 @@ class BJSONFile:
 
         if showDebug:
             print("Assembling structure")
-        track = Tracking(0, MyDatabase("./hash_database.json"))
+        track = Tracking(0, 0, 0, MyDatabase("./hash_database.json"))
         bjsonRegions = BJSONRegions(structEntries, joinedStrings, arrayIndexes, headerIndexes, joinedHeadersStrings)
         entry: StructEntry = bjsonRegions.structre.pop(0)
         if entry.data_type == 6:
@@ -161,4 +92,49 @@ class BJSONFile:
         else:
             raise StructureError(f"Data type {entry.data_type} is unknown or shouldn't go first in file. Expected 6 (object) or 4 (array)")
 
-        return json.dumps(root, ensure_ascii=False, indent=4)
+        track.db.save()
+        self.data.seek(0)
+        return root
+    
+    def toJson(self, showDebug: bool = False):
+        return json.dumps(self.toPython(showDebug), ensure_ascii=False, indent=4)
+    
+    def fromPython(self, data: dict|list):
+        tracking = Tracking(0, 0, 0, MyDatabase("./hash_database.json"))
+        bjsonRegions = BJSONRegions([], b'', [], [], b'')
+
+        if isinstance(data, dict):
+            bjsonRegions.structre.append(StructEntry(6, len(data), 0))
+            addObject(bjsonRegions, data, tracking)
+        elif isinstance(data, list):
+            bjsonRegions.structre.append(StructEntry(4, len(data), 0))
+            addList(bjsonRegions, data, tracking)
+        else:
+            raise TypeError("data expected to be 'list' or 'dict'")
+        
+        self.data = io.BytesIO(bytearray())
+
+        self.data.write(len(bjsonRegions.structre).to_bytes(4, "little"))
+        for element in bjsonRegions.structre:
+            element.writeToFile(self.data)
+
+        self.data.write(len(bjsonRegions.joinedStrings).to_bytes(4, "little"))
+        self.data.write(bjsonRegions.joinedStrings)
+
+        self.data.write(len(bjsonRegions.arrayIndexes).to_bytes(4, "little"))
+        for element in bjsonRegions.arrayIndexes:
+            self.data.write(element.to_bytes(4, "little"))
+
+        self.data.write(len(bjsonRegions.headerIndexes).to_bytes(4, "little"))
+        for element in bjsonRegions.headerIndexes:
+            element.writeToFile(self.data)
+
+        self.data.write(len(bjsonRegions.joinedHeaderStrings).to_bytes(4, "little"))
+        self.data.write(bjsonRegions.joinedHeaderStrings)
+
+        self.data.seek(0)
+        return
+    
+    def fromJson(self, json_str: str):
+        self.fromPython(json.loads(json_str))
+        return
