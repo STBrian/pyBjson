@@ -1,100 +1,103 @@
 # pyBjson
-A binary json file used in MC3DS Edition
+Un archivo BJSON es en escencia la forma binaria de un JSON usado en MC3DS Edition
 
+# Estructura
+## Estructura JSON
+La primera parte del archivo es donde se define la estructura JSON, donde cada elemento se representa por un conjunto de 3 números enteros de 32 bits.
+
+Antes inicia con un entero de 32 bits que representa la longitud de objetos que posee la estructura. Seguido de eso ya vienen los objetos en orden de la estructura original del archivo JSON.
+
+Los tipos de datos que puede contener son los siguientes, includia su estructura.
+
+### Estructura base
 ```
-El archivo está en little endian. Se separa de 4 en 4-Bytes.
-** The file/archive is in little endian, and is separated by 4-Bytes per-region.
-
-Identificadores (Structure Identification):
-    1 - Booleano         (Boolean)
-    2 - Entero           (32-Bit Integer)
-    3 - Flotante         (32-Bit Floating Point Integer)
-    4 - Lista            (JSON List)
-    5 - Cadena de texto  (Checksum/Placeholder for Text)
-    6 - Objeto           (JSON Object)
-
-Un conjunto de 4 bytes antes del inicio de la región de textos indica la longitud de caracteres de la región.
-** 4-bytes before the number starts holds data, such as the length of the text.
-** Among other things such as defining how the data is structured in the region.
-
-Ejemplo (Example):
-    Entero (32-Bit Integer):
-        Bytearray - 02 00 00 00   -   3A 00 00 00
-                    ^ Declaration     ^ Value
-
-        Arreglo-Completo (Full Array):
-            02 00 00 00 3A 00 00 00
-
-  Objeto (JSON Object):
-        Bytearray - 06 00 00 00       -       03 00 00 00       -       01 00 00 00       -       01 00 00 00
-                    ^ Declaration             ^ Number of Object Items  ^ Boolean                 ^ Value: True
-
-        Arreglo-Completo (Full Array):
-            06 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00
-
--- Información específica (Information/Specsheet)
-    Estructuras (Data Structures):
-        1 - Booleano (Boolean/Bool):
-            Identificador                           - 01 00 00 00
-            Valor                                   - (01 00 00 00) ó (00 00 00 00) True or False respectivamente (Respectively)
-            Espacio vacío                           - 4 bytes nulos (4-Byte NULL Padding)
-
-        2 - Entero (32-Bit Int):
-            Identificador                           - 02 00 00 00
-            Valor                                   - 4 bytes signed integrer little endian
-            Espacio vacío                           - 4 bytes nulos (4-Byte NULL Padding)
-
-        3 - Flotante (32-Bit Floating Point Int):
-            Identificador                           - 03 00 00 00
-            Valor                                   - 4 bytes número en formato de 32 bits de punto flotante little endian
-            Espacio vacío                           - 4 bytes nulos (4-Byte NULL Padding)
-
-        4 - Lista (JSON List):
-            Identificador                           - 04 00 00 00
-            Longitud en objetos                     - 4 bytes unsigned integrer little endian
-            Longitud final                          - 4 bytes que representan la suma de todos los elementos 
-                                                        internos de aquellos elementos que se hayan cerrado 
-                                                        antes que este y que sean del mismo tipo.
-
-        5 - Cadena de texto (Text):
-            Identificador                           - 05 00 00 00
-            Hash JOAAT (kind of)                    - 4 bytes little endian
-            Posición del texto en región de textos  - 4 bytes unsigned integrer little endian
-
-        6 - Objeto (JSON Object):
-            Identificador                           - 06 00 00 00
-            Longitud en objetos                     - 4 bytes unsigned integrer little endian
-            Longitud final                          - 4 bytes que representan la suma de todos los elementos 
-                                                        internos de aquellos elementos que se hayan cerrado 
-                                                        antes que este y que sean del mismo tipo.
-
-    Regiones:
-        - Estructura
-            En esta región se encuentran almacenados todos los elementos que existen en el archivo con su tipo
-            y estructura respectivamente, así como datos simples, sin incluir los textos pero si sus posiciones
-            en la siguiente región. Inicia indicando la longitud en elementos que contiene la región, cada elemento 
-            se conforma por 3 conjuntos de 4 bytes. El primero será el identificador de qué tipo de dato es, el siguiente
-            suele ser su valor, y el tercero solo se usa en tipos de datos object, array y strings.
-
-        - Textos
-            Los textos usados por los elementos declarados como textos se ecnuentran almacenados en esta región.
-            Inicia declarando con 4 bytes en little endian el largo en bytes de toda la región, seguido de todos
-            los textos juntos, cada uno terminado con un byte nulo.
-
-        - Objetos sin cabeceras
-            Esta región indica aquellos elementos que no incluyen cabeceras, se usa para aquellos elementos que 
-            se encuentran dentro de una lista. Inicia indicando la longitud de elementos de la región, seguido del 
-            índice de aquel elemento que no tiene cabecera. Cada indicador se representa igualmente con 4 bytes en 
-            little endian.
-
-        - Posiciones de cabeceras
-            Aquí es donde se encuentra la información de cada cabecera y el índice del elemento al que pertenece. Inicia
-            con 4 bytes indicando la cantidad de elementos con los que cuenta, estos elementos a su vez tienen una longitud
-            de 3 conjuntos de 4 bytes. Los primeros 4 bytes son un checksum JOAAT (kind of) del texto de la cabecera, los siguientes
-            son la posición del texto de la cabecera en la siguiente región, y el último conjunto es el índice del elemento
-            al que pertenece.
-
-        - Texto de las cabeceras
-            Esta región funciona igual que la región de los Textos. La única diferencia es que almacena el texto de las
-            cabeceras y no los valores que son strings.
+int32       int32       int32
+Data type   Value 1     Value 2
 ```
+### Estructuras especificas
+#### Nulo - null
+```
+int32   int32   int32
+0       0       0
+```
+#### Booleano - boolean
+```
+int32   int32               int32
+1       (0|1)=(false|true)  0
+```
+#### Entero - integer
+```
+int32   int32   int32
+2       Value   0
+```
+#### Flotante - float
+```
+int32   int32   int32
+3       Value   0
+```
+#### Array
+```
+int32   int32   int32
+4       Lenght  Objects in previous arrays
+```
+Objects in previous arrays se refiere a la cantidad de objetos que hay en arrays anteriores al momento en el que se cierra un array
+#### Cadena de texto - string
+```
+int32   int32   int32
+5       Hash    String start position
+```
+String start position representa la posición en la que la cadena de texto inicia dentro de la siguiente sección del archivo, que es una sección que contiene todos los textos usados en la estructura, terminados con el caracter nulo
+#### Objecto - object
+```
+int32   int32   int32
+6       Lenght  Objects in previous objects
+```
+Objects in previous objects se refiere a la cantidad de objetos que hay en objetos anteriores al momento en el que se cierra un objeto
+## Cadenas de texto
+En esta sección se agrupan todas las cadenas de texto usadas en el archivo BJSON que se guardan como valores, eso significa que no incluye el texto de las cabeceras, las cuales se encuentran en otra sección.
+
+Las cadenas de texto están terminadas por el caractér nulo.
+
+La sección inicia con un entero de 32 bits que representa la cantidad de caracteres totales en la sección. Seguido se encuentran las cadenas de texto.
+## Índices de arrays
+En esta sección se encuentran todos los índices de los elementos que se encuentran en un array, se encuentran agrupados según el orden en el que se hayan cerrados los arrays, lo que significa que primero van a estar los índices del primer array que haya estado y se haya cerrado primero en el archivo JSON.
+
+Los elementos de esta sección están representados por un solo entero de 32 bits que representa el índice del elemento en la estructura, este índice se obtiene según el orden en el que haya aparecido en el JSON y es absoluto respecto a todos los demás elementos del JSON, significa que no habrán índices repetidos en esta sección nunca
+
+La sección inicia, como en las demás, con un entero de 32 bits que representa la cantidad de índices que hay en total, en la sección.
+## Key values
+En esta sección se encuentran definidas todos los key values o cabeceras.
+
+Es decir, si tienes en un JSON:
+```
+{
+    "my_number": 2
+}
+```
+"my_number" estará definido en esta sección.
+
+El propósito de esta sección es la búsqueda rápida de información mediante el uso de keys.
+
+Cada key tiene una estructura parecida a la de una cadena de texto:
+#### Key structure
+```
+int32   int32   int32
+Index   Hash    String start position
+```
+Donde el índice sigue las mismas reglas de la sección anterior, hash es el protagonista de esta sección, y String start position funciona igual que en la sección de estructura, con diferencia que ahora el texto se busca en la siguiente sección.
+
+La búsqueda de valores mediate keys se realiza usando el hash de la cadena de texto, ya que es más rápido comparar dos enteros que dos cadenas de texto. Por eso es importante el hash aquí.
+
+Además, los keys se agrupan de igual forma que en la sección anterior, con una adición, y es que dentro de cada grupo los keys se tienen que ordenar de menor a mayor según su valor de hash. Lo cual está relacionado con algoritmos de búsqueda más eficientes.
+
+La sección inicia con un entero de 32 bits que representa la cantidad de keys que contiene la sección
+## Cadenas de texto para keys
+Esta sección tiene las mismas reglas que la sección de Cadenas de texto, solo que aquí se almacenan las cadenas de texto que se usan en las keys.
+
+Inicia con un entero de 32 bits que indica la cantidad de caracteres que contiene la sección
+
+Cada cadena está terminada por el caractér nulo
+
+# Notas
+- El algoritmo para generar el hash de una cadena de texto es desconocido y debe ser el mismo que el juego usa de lo contrario podría ocurrir comportamientos inesperados
+- Si un objeto o array está vacía, el valor de la sumatoria se omite y en su lugar se coloca como 0
