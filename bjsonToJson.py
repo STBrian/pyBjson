@@ -24,7 +24,7 @@ def parseObject(root: dict, object: StructEntry, regions: BJSONRegions, tracking
         entry: StructEntry = regions.structre.pop(0)
         header = searchForHeader(regions.headerIndexes, tracking.item_idx)
         if not header:
-            raise StructureError("Header not found for element with index " + tracking.item_idx)
+            raise StructureError(f"Header not found for element with index {tracking.item_idx}")
         else:
             # This splits until first 0x00 starting from an index and then decodes it to utf-8
             headerString = regions.joinedHeaderStrings[header.stringPosition:].split(b'\0', 1)[0].decode("utf-8")
@@ -44,7 +44,7 @@ def parseObject(root: dict, object: StructEntry, regions: BJSONRegions, tracking
                     root[headerString] = {}
                     parseObject(root[headerString], entry, regions, tracking)
                 case _:
-                    raise StructureError("data_type unknown: " + entry.data_type)
+                    raise StructureError(f"data_type unknown: {entry.data_type}")
             
 def parseArray(root: list, object: StructEntry, regions: BJSONRegions, tracking: Tracking):
     # Iterate over array lenght
@@ -52,7 +52,7 @@ def parseArray(root: list, object: StructEntry, regions: BJSONRegions, tracking:
         tracking.item_idx += 1
         entry: StructEntry = regions.structre.pop(0)
         if not searchForIndexArray(regions.arrayIndexes, tracking.item_idx):
-            raise StructureError("Index array not found for: " + tracking.item_idx)
+            raise StructureError(f"Index array not found for: {tracking.item_idx}")
         else:
             match entry.data_type:
                 case 0|1|2|3:
@@ -71,4 +71,4 @@ def parseArray(root: list, object: StructEntry, regions: BJSONRegions, tracking:
                     parseObject(parsedObject, entry, regions, tracking)
                     root.append(parsedObject)
                 case _:
-                    raise StructureError("data_type unknown: " + entry.data_type)
+                    raise StructureError(f"data_type unknown: {entry.data_type}")
