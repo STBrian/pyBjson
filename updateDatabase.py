@@ -18,12 +18,7 @@ class MyDatabase():
         self.json_data[text] = hashval
 
     def getValue(self, key: str) -> int:
-        if os.path.exists(self.filepath):
-            with open(self.filepath, "r", encoding="utf-8") as f:
-                json_data = json.loads(f.read())
-            if key in json_data:
-                return json_data[key]
-            else:
-                return False
+        if key in self.json_data:
+            return self.json_data[key]
         else:
             return False
