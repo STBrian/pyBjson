@@ -68,10 +68,11 @@ def addObject(regions: BJSONRegions, data: dict, track: Tracking):
             regions.structre.append(StructEntry(6, len(data[key]), 0))
             addObject(regions, data[key], track)
     
-    regions.structre[local_idx].value2 = track.objects_lenght
-    track.objects_lenght += len(data)
-    sortHashMinMax(local_header_data)
-    regions.headerIndexes.extend(local_header_data)
+    if len(data) > 0:
+        regions.structre[local_idx].value2 = track.objects_lenght
+        track.objects_lenght += len(data)
+        sortHashMinMax(local_header_data)
+        regions.headerIndexes.extend(local_header_data)
     return
 
 def addList(regions: BJSONRegions, data: list, track: Tracking):
