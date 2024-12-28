@@ -32,7 +32,7 @@ int32   int32   int32
 ```
 #### Flotante - float
 ```
-int32   int32   int32
+int32   flt32   int32
 3       Value   0
 ```
 #### Array
