@@ -81,6 +81,7 @@ class Tracking:
     objects_lenght: int
     arrays_lenght: int
     db: MyDatabase
+    generateMissingHashes: bool
 
 class HeaderEntry:
     def __init__(self, stringHash = 0, stringPosition = 0, headerIndex = 0):

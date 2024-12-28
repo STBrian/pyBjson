@@ -99,8 +99,8 @@ class BJSONFile:
     def toJson(self, showDebug: bool = False):
         return json.dumps(self.toPython(showDebug), ensure_ascii=False, indent=4)
     
-    def fromPython(self, data: dict|list):
-        tracking = Tracking(0, 0, 0, MyDatabase("./hash_database.json"))
+    def fromPython(self, data: dict|list, generateMissingHashes: bool = False):
+        tracking = Tracking(0, 0, 0, MyDatabase("./hash_database.json"), generateMissingHashes)
         bjsonRegions = BJSONRegions([], b'', [], [], b'')
 
         if isinstance(data, dict):
@@ -135,6 +135,6 @@ class BJSONFile:
         self.data.seek(0)
         return
     
-    def fromJson(self, json_str: str):
-        self.fromPython(json.loads(json_str))
+    def fromJson(self, json_str: str, generateMissingHashes: bool = False):
+        self.fromPython(json.loads(json_str), generateMissingHashes)
         return

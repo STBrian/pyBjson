@@ -1,6 +1,4 @@
-import json
-import math
-from pathlib import Path
+from .JOAAThash import getLittleJOAAThash
 from typing import List
 
 try:
@@ -60,6 +58,8 @@ def addObject(regions: BJSONRegions, data: dict, track: Tracking):
         elif type(data[key]) == str:
             if track.db.getValue(data[key]):
                 hash_value = track.db.getValue(data[key])
+            elif track.generateMissingHashes:
+                hash_value = getLittleJOAAThash(data[key])
             else:
                 raise ValueError(f"Missing hash value for {data[key]}")
             regions.structre.append(StructEntry(5, hash_value, len(regions.joinedStrings)))
@@ -96,6 +96,8 @@ def addList(regions: BJSONRegions, data: list, track: Tracking):
         elif type(element) == str:
             if track.db.getValue(element):
                 hash_value = track.db.getValue(element)
+            elif track.generateMissingHashes:
+                hash_value = getLittleJOAAThash(element)
             else:
                 raise ValueError(f"Missing hash value for {element}")
             regions.structre.append(StructEntry(5, hash_value, len(regions.joinedStrings)))
