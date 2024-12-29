@@ -80,7 +80,7 @@ class BJSONFile:
 
         if showDebug:
             print("Assembling structure")
-        track = Tracking(0, 0, 0, MyDatabase("./hash_database.json"))
+        track = Tracking(0, 0, 0, MyDatabase("./hash_database.json"), False)
         bjsonRegions = BJSONRegions(structEntries, joinedStrings, arrayIndexes, headerIndexes, joinedHeadersStrings)
         entry: StructEntry = bjsonRegions.structre.pop(0)
         if entry.data_type == 6:

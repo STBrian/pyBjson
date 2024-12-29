@@ -31,4 +31,4 @@ def getLittleJOAAThash(text: str):
     little_version = bytes.fromhex(hex_value)[::-1]
     if len(little_version) < 4:
         little_version = little_version + b'\0'
-    return little_version[:4]
+    return int.from_bytes(little_version[:4], "little")
