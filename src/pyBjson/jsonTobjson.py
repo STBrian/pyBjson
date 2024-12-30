@@ -1,12 +1,13 @@
-from .JOAAThash import getLittleJOAAThash
 from typing import List
 
 try:
     from .bjsonStructures import BJSONRegions, StructEntry, Tracking, HeaderEntry
     from .updateDatabase import MyDatabase
+    from .jenkins_hash import jenkins_get_hash
 except:
     from bjsonStructures import BJSONRegions, StructEntry, Tracking, HeaderEntry
     from updateDatabase import MyDatabase
+    from jenkins_hash import jenkins_get_hash
 
 def sortHashMinMax(headerHashes: List[HeaderEntry]):
     n = len(headerHashes)
@@ -59,7 +60,7 @@ def addObject(regions: BJSONRegions, data: dict, track: Tracking):
             if track.db.getValue(data[key]):
                 hash_value = track.db.getValue(data[key])
             elif track.generateMissingHashes:
-                hash_value = getLittleJOAAThash(data[key])
+                hash_value = jenkins_get_hash(data[key].lower().encode("utf-8"))
             else:
                 raise ValueError(f"Missing hash value for {data[key]}")
             regions.structre.append(StructEntry(5, hash_value, len(regions.joinedStrings)))
@@ -97,7 +98,7 @@ def addList(regions: BJSONRegions, data: list, track: Tracking):
             if track.db.getValue(element):
                 hash_value = track.db.getValue(element)
             elif track.generateMissingHashes:
-                hash_value = getLittleJOAAThash(element)
+                hash_value = jenkins_get_hash(element.lower().encode("utf-8"))
             else:
                 raise ValueError(f"Missing hash value for {element}")
             regions.structre.append(StructEntry(5, hash_value, len(regions.joinedStrings)))
