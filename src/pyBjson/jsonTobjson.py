@@ -59,10 +59,8 @@ def addObject(regions: BJSONRegions, data: dict, track: Tracking):
         elif type(data[key]) == str:
             if track.db.getValue(data[key]):
                 hash_value = track.db.getValue(data[key])
-            elif track.generateMissingHashes:
-                hash_value = jenkins_get_hash(data[key].lower().encode("utf-8"))
             else:
-                raise ValueError(f"Missing hash value for {data[key]}")
+                hash_value = jenkins_get_hash(data[key].lower().encode("utf-8"))
             regions.structre.append(StructEntry(5, hash_value, len(regions.joinedStrings)))
             regions.joinedStrings += data[key].encode('utf-8') + b'\0'
         elif type(data[key]) == dict:
@@ -97,10 +95,8 @@ def addList(regions: BJSONRegions, data: list, track: Tracking):
         elif type(element) == str:
             if track.db.getValue(element):
                 hash_value = track.db.getValue(element)
-            elif track.generateMissingHashes:
-                hash_value = jenkins_get_hash(element.lower().encode("utf-8"))
             else:
-                raise ValueError(f"Missing hash value for {element}")
+                hash_value = jenkins_get_hash(element.lower().encode("utf-8"))
             regions.structre.append(StructEntry(5, hash_value, len(regions.joinedStrings)))
             regions.joinedStrings += element.encode('utf-8') + b'\0'
         elif type(element) == dict:
