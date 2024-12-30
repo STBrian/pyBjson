@@ -30,7 +30,7 @@ def appendHeader(hashdb: MyDatabase, header: str, g_count: int, lenHTData: int, 
     if hashdb.getValue(header):
         element.stringHash = hashdb.getValue(header)
     else:
-        return False
+        return jenkins_get_hash(header.lower().encode("utf-8"))
     element.stringPosition = lenHTData
     element.headerIndex = g_count
     headerHashes.append(element)
