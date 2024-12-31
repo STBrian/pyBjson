@@ -6,12 +6,10 @@ try:
     from .bjsonStructures import StructEntry, StructureError, HeaderEntry, Tracking, BJSONRegions
     from .bjsonToJson import parseObject, parseArray
     from .jsonTobjson import addObject, addList
-    from .updateDatabase import MyDatabase
 except:
     from bjsonStructures import StructEntry, StructureError, HeaderEntry, Tracking, BJSONRegions
     from bjsonToJson import parseObject, parseArray
     from jsonTobjson import addObject, addList
-    from updateDatabase import MyDatabase
 
 class BJSONFile:
     def open(self, path: str | Path):
@@ -34,7 +32,7 @@ class BJSONFile:
             raise TypeError("data expected to be 'bytes' or 'bytearray'")
         return self
     
-    def getData(self):
+    def getData(self) -> bytes:
         self.data.seek(0)
         data = self.data.read()
         self.data.seek(0)
@@ -80,7 +78,7 @@ class BJSONFile:
 
         if showDebug:
             print("Assembling structure")
-        track = Tracking(0, 0, 0, MyDatabase("./hash_database.json"), False)
+        track = Tracking(0, 0, 0)
         bjsonRegions = BJSONRegions(structEntries, joinedStrings, arrayIndexes, headerIndexes, joinedHeadersStrings)
         entry: StructEntry = bjsonRegions.structre.pop(0)
         if entry.data_type == 6:
@@ -92,15 +90,14 @@ class BJSONFile:
         else:
             raise StructureError(f"Data type {entry.data_type} is unknown or shouldn't go first in file. Expected 6 (object) or 4 (array)")
 
-        track.db.save()
         self.data.seek(0)
         return root
     
     def toJson(self, showDebug: bool = False):
         return json.dumps(self.toPython(showDebug), ensure_ascii=False, indent=4)
     
-    def fromPython(self, data: dict|list, generateMissingHashes: bool = False):
-        tracking = Tracking(0, 0, 0, MyDatabase("./hash_database.json"), generateMissingHashes)
+    def fromPython(self, data: dict|list):
+        tracking = Tracking(0, 0, 0)
         bjsonRegions = BJSONRegions([], b'', [], [], b'')
 
         if isinstance(data, dict):
@@ -133,8 +130,8 @@ class BJSONFile:
         self.data.write(bjsonRegions.joinedHeaderStrings)
 
         self.data.seek(0)
-        return
+        return self
     
-    def fromJson(self, json_str: str, generateMissingHashes: bool = False):
-        self.fromPython(json.loads(json_str), generateMissingHashes)
-        return
+    def fromJson(self, json_str: str):
+        self.fromPython(json.loads(json_str))
+        return self

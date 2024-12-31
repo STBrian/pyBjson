@@ -1,10 +1,6 @@
 import struct
 from typing import BinaryIO, List
 from dataclasses import dataclass
-try:
-    from .updateDatabase import MyDatabase
-except:
-    from updateDatabase import MyDatabase
 
 class StructureError(Exception):
     def __init__(self, *args):
@@ -80,8 +76,6 @@ class Tracking:
     item_idx: int
     objects_lenght: int
     arrays_lenght: int
-    db: MyDatabase
-    generateMissingHashes: bool
 
 class HeaderEntry:
     def __init__(self, stringHash = 0, stringPosition = 0, headerIndex = 0):

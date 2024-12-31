@@ -28,7 +28,6 @@ def parseObject(root: dict, object: StructEntry, regions: BJSONRegions, tracking
         else:
             # This splits until first 0x00 starting from an index and then decodes it to utf-8
             headerString = regions.joinedHeaderStrings[header.stringPosition:].split(b'\0', 1)[0].decode("utf-8")
-            tracking.db.addToDatabase(headerString, header.stringHash)
 
             match entry.data_type:
                 case 0|1|2|3:
@@ -36,7 +35,6 @@ def parseObject(root: dict, object: StructEntry, regions: BJSONRegions, tracking
                 case 5:
                     # This splits until first 0x00 starting from an index and then decodes it to utf-8
                     root[headerString] = regions.joinedStrings[entry.value2:].split(b'\0', 1)[0].decode("utf-8")
-                    tracking.db.addToDatabase(root[headerString], entry.value1)
                 case 4:
                     root[headerString] = []
                     parseArray(root[headerString], entry, regions, tracking)
@@ -61,7 +59,6 @@ def parseArray(root: list, object: StructEntry, regions: BJSONRegions, tracking:
                     # This splits until first 0x00 starting from an index and then decodes it to utf-8
                     string = regions.joinedStrings[entry.value2:].split(b'\0', 1)[0].decode("utf-8")
                     root.append(string)
-                    tracking.db.addToDatabase(string, entry.value1)
                 case 4:
                     root_array = []
                     parseArray(root_array, entry, regions, tracking)

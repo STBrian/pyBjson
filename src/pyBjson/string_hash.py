@@ -1,4 +1,4 @@
-def jenkins_get_hash(string: bytes) -> int:
+def get_JOAAT_hash(string: bytes) -> int:
     hash_ = 0
     for char in string:
         hash_ += char

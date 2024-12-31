@@ -2,12 +2,10 @@ from typing import List
 
 try:
     from .bjsonStructures import BJSONRegions, StructEntry, Tracking, HeaderEntry
-    from .updateDatabase import MyDatabase
-    from .jenkins_hash import jenkins_get_hash
+    from .string_hash import get_JOAAT_hash
 except:
     from bjsonStructures import BJSONRegions, StructEntry, Tracking, HeaderEntry
-    from updateDatabase import MyDatabase
-    from jenkins_hash import jenkins_get_hash
+    from string_hash import get_JOAAT_hash
 
 def sortHashMinMax(headerHashes: List[HeaderEntry]):
     n = len(headerHashes)
@@ -25,12 +23,9 @@ def sortHashMinMax(headerHashes: List[HeaderEntry]):
             break
     return
 
-def appendHeader(hashdb: MyDatabase, header: str, g_count: int, lenHTData: int, headerHashes: List[HeaderEntry]):
+def appendHeader(header: str, g_count: int, lenHTData: int, headerHashes: List[HeaderEntry]):
     element = HeaderEntry()
-    if hashdb.getValue(header):
-        element.stringHash = hashdb.getValue(header)
-    else:
-        return jenkins_get_hash(header.lower().encode("utf-8"))
+    element.stringHash = get_JOAAT_hash(header.lower().encode("utf-8"))
     element.stringPosition = lenHTData
     element.headerIndex = g_count
     headerHashes.append(element)
@@ -41,7 +36,7 @@ def addObject(regions: BJSONRegions, data: dict, track: Tracking):
     local_idx = track.item_idx
     for key in data:
         track.item_idx += 1
-        if not appendHeader(track.db, key, track.item_idx, len(regions.joinedHeaderStrings), local_header_data):
+        if not appendHeader(key, track.item_idx, len(regions.joinedHeaderStrings), local_header_data):
             raise ValueError(f"Missing hash value for: {key}")
         regions.joinedHeaderStrings += key.encode("utf-8") + b'\0'
 
@@ -57,10 +52,7 @@ def addObject(regions: BJSONRegions, data: dict, track: Tracking):
             regions.structre.append(StructEntry(4, len(data[key]), 0))
             addList(regions, data[key], track)
         elif type(data[key]) == str:
-            if track.db.getValue(data[key]):
-                hash_value = track.db.getValue(data[key])
-            else:
-                hash_value = jenkins_get_hash(data[key].lower().encode("utf-8"))
+            hash_value = get_JOAAT_hash(data[key].lower().encode("utf-8"))
             regions.structre.append(StructEntry(5, hash_value, len(regions.joinedStrings)))
             regions.joinedStrings += data[key].encode('utf-8') + b'\0'
         elif type(data[key]) == dict:
@@ -93,10 +85,7 @@ def addList(regions: BJSONRegions, data: list, track: Tracking):
             regions.structre.append(StructEntry(4, len(element), 0))
             addList(regions, element, track)
         elif type(element) == str:
-            if track.db.getValue(element):
-                hash_value = track.db.getValue(element)
-            else:
-                hash_value = jenkins_get_hash(element.lower().encode("utf-8"))
+            hash_value = get_JOAAT_hash(element.lower().encode("utf-8"))
             regions.structre.append(StructEntry(5, hash_value, len(regions.joinedStrings)))
             regions.joinedStrings += element.encode('utf-8') + b'\0'
         elif type(element) == dict:
