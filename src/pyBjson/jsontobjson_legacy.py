@@ -1,4 +1,5 @@
 import json, math, sys
+import deprecation
 try:
     from .utils import *
     from .updateDatabase import MyDatabase
@@ -214,7 +215,8 @@ def addString(sdata: list, tdata: list, nhdata: list, hdata: list, htdata: list,
         htdata.extend(header.encode("utf-8") + b'\0')
         #htdata.append(0)
 
-def convertJsonToBjson_legacy(fp: str) -> (tuple[bool, int]):
+@deprecation.deprecated(deprecated_in="1.0", current_version="1.0", details="Use BJSONFile class method instead")
+def convertJsonToBjson(fp: str) -> (tuple[bool, int]):
     hash_database = MyDatabase("hash_database.json")
     filepath = Path(fp)
     with open(filepath, "r", encoding='utf-8') as f:
