@@ -1,12 +1,14 @@
 import json
-import deprecation
+from pathlib import Path
+
 try:
     from .utils import *
     from .updateDatabase import MyDatabase
+    from .deprecation_warn import deprecated
 except:
     from utils import *
     from updateDatabase import MyDatabase
-from pathlib import Path
+    from deprecation_warn import deprecated
 
 def getHeaders(data: bytes, hash_database: MyDatabase):
     count = 0
@@ -42,7 +44,7 @@ def getHeaders(data: bytes, hash_database: MyDatabase):
             count += 1
     return headers
 
-@deprecation.deprecated(deprecated_in="1.0", current_version="1.0", details="Use BJSONFile class method instead")
+@deprecated("Use BJSONFile class method instead")
 def convertBjsonToJson(fp: str|Path|None):
     hash_database = MyDatabase("hash_database.json")
     if type(fp) == str:

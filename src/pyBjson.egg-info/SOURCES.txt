@@ -2,7 +2,6 @@ LICENSE
 README.md
 pyproject.toml
 setup.py
-src/pyBjson/JOAAThash.py
 src/pyBjson/__init__.py
 src/pyBjson/bjson.py
 src/pyBjson/bjsonStructures.py
@@ -11,6 +10,7 @@ src/pyBjson/bjsontojson_legacy.py
 src/pyBjson/example.py
 src/pyBjson/jsonTobjson.py
 src/pyBjson/jsontobjson_legacy.py
+src/pyBjson/string_hash.py
 src/pyBjson/updateDatabase.py
 src/pyBjson/utils.py
 src/pyBjson.egg-info/PKG-INFO

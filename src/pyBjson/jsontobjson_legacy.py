@@ -1,12 +1,14 @@
-import json, math, sys
-import deprecation
+import json, math
+from pathlib import Path
+
 try:
     from .utils import *
     from .updateDatabase import MyDatabase
+    from .deprecation_warn import deprecated
 except:
     from utils import *
     from updateDatabase import MyDatabase
-from pathlib import Path
+    from deprecation_warn import deprecated
 
 def sortHashMinMax(headerHashes: list):
     n = len(headerHashes)
@@ -46,14 +48,12 @@ def addObject(sdata: list, tdata: list, nhdata: list, hdata: list, htdata: list,
     sdata.extend(int_to_bytes(len(data), "little"))
     end_idx = len(sdata)
     local_count = g_count
-    #sdata.extend([0] * 4)
     if header == None and local_count != 0:
         tmp_nhdata.extend(int_to_bytes(g_count, "little"))
     if header != None:
         if not appendHeader(hashdb, header, g_count, len(htdata), self_hdata):
             return 1
         htdata.extend(header.encode("utf-8") + b'\0')
-        #htdata.append(0)
     g_count += 1
     for key in data:
         if type(data[key]) == bool:
@@ -108,7 +108,6 @@ def addList(sdata: list, tdata: list, nhdata: list, hdata: list, htdata: list, h
     sdata.extend(int_to_bytes(4, "little"))
     sdata.extend(int_to_bytes(len(data), "little"))
     end_idx = len(sdata)
-    #sdata.extend([0] * 4)
     local_count = g_count
     if header == None and local_count != 0:
         tmp_nhdata.extend(int_to_bytes(g_count, "little"))
@@ -116,7 +115,6 @@ def addList(sdata: list, tdata: list, nhdata: list, hdata: list, htdata: list, h
         if not appendHeader(hashdb, header, g_count, len(htdata), self_hdata):
             return 1
         htdata.extend(header.encode("utf-8") + b'\0')
-        #htdata.append(0)
     g_count += 1
     for key in data:
         if type(key) == bool:
@@ -171,7 +169,6 @@ def addBool(sdata: list, nhdata: list, hdata: list, htdata: list, header: str | 
         if not appendHeader(hashdb, header, count, len(htdata), hdata):
             return 1
         htdata.extend(header.encode("utf-8") + b'\0')
-        #htdata.append(0)
 
 def addInt(sdata: list, nhdata: list, hdata: list, htdata: list, header: str | None, value: int, count: int, hashdb: MyDatabase = None):
     sdata.extend(int_to_bytes(2, "little"))
@@ -183,7 +180,6 @@ def addInt(sdata: list, nhdata: list, hdata: list, htdata: list, header: str | N
         if not appendHeader(hashdb, header, count, len(htdata), hdata):
             return 1
         htdata.extend(header.encode("utf-8") + b'\0')
-        #htdata.append(0)
 
 def addFloat(sdata: list, nhdata: list, hdata: list, htdata: list, header: str | None, value: float, count: int, hashdb: MyDatabase = None):
     sdata.extend(int_to_bytes(3, "little"))
@@ -195,7 +191,6 @@ def addFloat(sdata: list, nhdata: list, hdata: list, htdata: list, header: str |
         if not appendHeader(hashdb, header, count, len(htdata), hdata):
             return 1
         htdata.extend(header.encode("utf-8") + b'\0')
-        #htdata.append(0)
 
 def addString(sdata: list, tdata: list, nhdata: list, hdata: list, htdata: list, header: str | None, value: str, count: int, hashdb: MyDatabase = None):
     sdata.extend(int_to_bytes(5, "little"))
@@ -213,9 +208,8 @@ def addString(sdata: list, tdata: list, nhdata: list, hdata: list, htdata: list,
         if not appendHeader(hashdb, header, count, len(htdata), hdata):
             return 1
         htdata.extend(header.encode("utf-8") + b'\0')
-        #htdata.append(0)
 
-@deprecation.deprecated(deprecated_in="1.0", current_version="1.0", details="Use BJSONFile class method instead")
+@deprecated("Use BJSONFile class method instead")
 def convertJsonToBjson(fp: str) -> (tuple[bool, int]):
     hash_database = MyDatabase("hash_database.json")
     filepath = Path(fp)

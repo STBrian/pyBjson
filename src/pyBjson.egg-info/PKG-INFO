@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.2
 Name: pyBjson
 Version: 1.0.0
 Summary: Python module to convert MC3DS BJSON <-> JSON.
@@ -788,5 +788,5 @@ Inicia con un entero de 32 bits que indica la cantidad de caracteres que contien
 Cada cadena está terminada por el caractér nulo
 
 # Notas
-- El algoritmo para generar el hash de una cadena de texto es desconocido y debe ser el mismo que el juego usa de lo contrario podría ocurrir comportamientos inesperados
-- Si un objeto o array está vacía, el valor de la sumatoria se omite y en su lugar se coloca como 0
+- Para generar los hash de cada cadena se utiliza un algoritmo JOAAT de 32 bits. Antes de generar el hash, la cadena se debe convertir a todo minúsculas.
+- Si un objeto o array está vacía, el valor de la sumatoria se omite y en su lugar se coloca como 0.
