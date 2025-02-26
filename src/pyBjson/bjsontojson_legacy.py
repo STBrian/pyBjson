@@ -1,3 +1,7 @@
+# Copyright (C) 2025 STBrian
+# This file is part of 'pyBjson' and is licensed under the GPLv3.
+# See <https://www.gnu.org/licenses/> for details.
+
 import json
 from pathlib import Path
 

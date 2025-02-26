@@ -1,3 +1,7 @@
+# Copyright (C) 2025 STBrian
+# This file is part of 'pyBjson' and is licensed under the GPLv3.
+# See <https://www.gnu.org/licenses/> for details.
+
 import struct
 
 def extract_chunk(data: bytes, idx: int, size: int = 4, start_from: int = 0):
